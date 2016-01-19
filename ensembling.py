@@ -24,13 +24,12 @@ import scipy.stats as ss
 ################################# Models ######################################
 ###############################################################################
 
+
 class Model:
     def __init__(self,class_type,Cmin,Cmax):
         self.class_type=class_type # One of : lr, nn, rf
         self.Cmin=Cmin
         self.Cmax=Cmax
-        self.best_params=0
-        self.estimator=0
         
     def train(self,X,y):
         
@@ -63,9 +62,8 @@ class Model:
                           scoring=metric_score)
         gs.fit(X,  y)
         
-        # Remember best estimator and best params
-        self.estimator,self.best_params=gs.best_estimator_,gs.best_params_
-
+        # Return best estimator and best params
+        return gs.best_estimator_,gs.best_params_
 
 
 
@@ -108,7 +106,7 @@ class Vote:
 
 # This class contains the notion of Layer. A layer contains a set of models (that can be trained into estimators) and a set of estimators (trained models OR vote paradigms)
 
-class Layer:
+class Layer2:
     def __init__(self,name):
         self.name=name
         self.models=[]
@@ -122,9 +120,9 @@ class Layer:
     def train_models(self,X,y):
         estimators=[]
         for m in self.models:
-            m.train(X,y)
-            estimators.append(m.estimator)
-        self.add_estimators(estimators)
+            estimator,params=m.train(X,y)
+            estimators.append(estimator)
+        return estimators
         
     # Estimators must have a predict_proba methods
     def add_estimators(self,estimators):
