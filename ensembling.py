@@ -88,13 +88,13 @@ class Vote:
         
         if self.vote_type=='norm':
             y_norm=(X-np.min(X,axis=0))/(np.max(X,axis=0)-np.min(X,axis=0))
-            y_vote=np.array([1-np.sum(y_norm,axis=1)/float(d)]).T
+            y_vote=np.array([np.sum(y_norm,axis=1)/float(d)]).T
         elif self.vote_type=='rank':
             y_pred_rank=[ss.rankdata(X[:,i])/float(np.shape(X)[0]) for i in range(d)]
             y_pred_rank=np.array(y_pred_rank).T
-            y_vote=np.array([1-np.sum(y_pred_rank,axis=1)/float(d)]).T
+            y_vote=np.array([np.sum(y_pred_rank,axis=1)/float(d)]).T
         else:
-            y_vote=np.array([1-np.sum(X,axis=1)/float(d)]).T
+            y_vote=np.array([np.sum(X,axis=1)/float(d)]).T
         
         return y_vote
         
@@ -122,6 +122,7 @@ class Layer:
         for m in self.models:
             estimator,params=m.train(X,y)
             estimators.append(estimator)
+        self.add_estimators(estimators)
         return estimators
         
     # Estimators must have a predict_proba methods
@@ -159,7 +160,7 @@ class Network:
         return 0
         
     def add_layer(self,name,models): 
-        layer=Layer2(name)
+        layer=Layer(name)
         for m in models:
             layer.add_model(m)
         self.layers.append(layer)
@@ -173,7 +174,6 @@ class Network:
         return 0
     
     def activate_layer(self,layer_n,X_in):
-        # Activate first layer
         layer=self.layers[layer_n]
         X_out=layer.activate(X_in)
         return X_out                
@@ -206,14 +206,13 @@ def test_algo(source_list,target,X_train_list,y_train_list,X_test_list,y_test_li
 
     # Use GridSearch and cross-validation on train to find best estimator
     m=Model(class_type,Cmin,Cmax)
-    m.train(X_train,y_train)
-    estimator,best_params=m.estimator,m.best_params
+    estimator,best_params=m.train(X_train,y_train)
 
     # Compute ROC on test
     y_proba=estimator.predict_proba(X_test)
     roc=roc_auc_score(y_test,y_proba[:,1])
 
-    return roc,m
+    return roc,estimator,best_params
 
 
 
