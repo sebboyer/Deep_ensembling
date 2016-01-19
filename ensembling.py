@@ -106,7 +106,7 @@ class Vote:
 
 # This class contains the notion of Layer. A layer contains a set of models (that can be trained into estimators) and a set of estimators (trained models OR vote paradigms)
 
-class Layer2:
+class Layer:
     def __init__(self,name):
         self.name=name
         self.models=[]
@@ -136,6 +136,47 @@ class Layer2:
             Y.append(y)
         Y=np.array(Y).T
         return Y
+
+
+###############################################################################
+################################# Network #####################################
+###############################################################################
+
+# This class contains the Network class. A Network is composed of a set of training sets and a set of layers that list the models used and that states the structure with which models are merged together to produce the final output
+
+class Network:
+    def __init__(self):
+        self.layers=[]
+        self.X_sets=[]
+        self.y_sets=[]
+        
+    def add_trainSet(self,X,y):
+        if np.shape(X)[0]!=np.shape(y)[0]:
+            print "Dimensions of X and y don't match"
+            return 1
+        self.X_sets.append(X)
+        self.y_sets.append(y)
+        return 0
+        
+    def add_layer(self,name,models): 
+        layer=Layer2(name)
+        for m in models:
+            layer.add_model(m)
+        self.layers.append(layer)
+        
+    def train_first_layer(self):
+        for i in range(len(self.X_sets)):
+            X=self.X_sets[i]
+            y=self.y_sets[i]
+            estimators=self.layers[0].train_models(X,y)
+            self.layers[0].add_estimators(estimators)
+        return 0
+    
+    def activate_layer(self,layer_n,X_in):
+        # Activate first layer
+        layer=self.layers[layer_n]
+        X_out=layer.activate(X_in)
+        return X_out                
 
 
 
