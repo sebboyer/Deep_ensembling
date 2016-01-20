@@ -87,6 +87,25 @@ def TPR_FRP(estimator, X_test, y_test,cat):
 
     return data
 
+def plot_auc(estimators):
+
+    # Compute TRP/FRP
+    data_list=[]
+    for est in estimators:
+        data_net=TPR_FRP(est, X_test_list[target], y_test_list[target],'Network')
+        data_list.append(data_net)
+
+    # Transform data into pandas df
+    data=pd.concat(data_list)
+
+    # Plot using ggplot
+    plot=ggplot(data,aes(x='TRP',y='FRP',color='model')) + \
+        geom_abline(intercept = 0, slope = 1,color='black') + \
+        geom_line() + \
+        scale_y_continuous(labels='comma')+\
+        xlab("False Positive") + ylab("True Positive") + ggtitle("ROC curve Dropout prediction")
+    return plot
+
 
 
 

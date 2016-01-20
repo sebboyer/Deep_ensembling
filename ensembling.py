@@ -30,12 +30,20 @@ class Model:
         self.class_type=class_type # One of : lr, nn, rf
         self.Cmin=Cmin
         self.Cmax=Cmax
+
+    def __name__(self):
+        return "Model"
         
     def train(self,X,y):
         
         # Initiate classifier type
         if self.class_type=="lr": # Sklearn Logistic regression
             estimator=linear_model.LogisticRegression()
+            params_to_try = {
+                'C': [10**i for i in range(self.Cmin, self.Cmax+1)],
+            }
+        elif self.class_type=="svm": # Sklearn SVM rbf
+            estimator=svm.SVC()
             params_to_try = {
                 'C': [10**i for i in range(self.Cmin, self.Cmax+1)],
             }
@@ -81,6 +89,9 @@ class Model:
 class Vote:
     def __init__(self,vote_type):
         self.vote_type=vote_type
+
+    def __name__(self):
+        return "Vote"
         
     def predict_proba(self,X):
         
@@ -117,11 +128,14 @@ class Layer:
         self.models.append(model)
     
     # Train models one by one and include estimators in self.estimators
-    def train_models(self,X,y):
+    def train_models(self,X=None,y=None):
         estimators=[]
         for m in self.models:
-            estimator,params=m.train(X,y)
-            estimators.append(estimator)
+            if isinstance(m,Model): # If model is of class Model: train + append
+                estimator,params=m.train(X,y)
+                estimators.append(estimator)
+            else: # If model is of class Vote : append it
+                estimators.append(m)
         self.add_estimators(estimators)
         return estimators
         
@@ -133,10 +147,39 @@ class Layer:
         #Trigger all estimators on X
         Y=[]
         for m in self.estimators:
-            y=m.predict_proba(X)[:,0]
+            if type(m)==svm.classes.SVC:
+                y_proba=m.decision_function(X)
+                y=(y_proba-np.min(y_proba))/(np.max(y_proba)-np.min(y_proba))
+            else:
+                y=m.predict_proba(X)[:,0]
             Y.append(y)
         Y=np.array(Y).T
         return Y
+
+    def evaluate(self,X_list,y_list):
+        est_score={}
+        for est in range(len(self.estimators)):
+            est_score[est]={}
+            for ds in range(len(X_list)):
+                Y=self.activate(X_list[ds])[:,est]
+                Y=np.array([1-x for x in Y])
+                est_score[est][ds]=roc_auc_score(y_list[ds],Y)
+        return est_score
+
+    def overweight_best_estimator(self,X_list,y_list):
+        # Evaluate estimators
+        est_score=self.evaluate(X_list,y_list)
+
+        # Find best estimator
+        best_est=-1
+        best_score=0
+        for k in est_score:
+            if np.sum(est_score[k].values())>best_score:
+                best_est=k
+
+        # Weight repeat best estimator as many times as the number of other estimators
+        estimators=[self.estimators[best_est]]*((len(self.estimators)-1)-1)
+        self.add_estimators(estimators)
 
 
 ###############################################################################
@@ -170,13 +213,45 @@ class Network:
             X=self.X_sets[i]
             y=self.y_sets[i]
             estimators=self.layers[0].train_models(X,y)
-            self.layers[0].add_estimators(estimators)
+        return 0
+
+    def train_NonFirst_layer(self,layer_n):
+        self.layers[layer_n].train_models()
+
+    def train(self):
+        self.train_first_layer()
+        if len(self.layers)>1:
+            for i in range(1,len(self.layers)):
+                self.train_NonFirst_layer(i)
         return 0
     
     def activate_layer(self,layer_n,X_in):
         layer=self.layers[layer_n]
         X_out=layer.activate(X_in)
-        return X_out                
+        return X_out   
+
+    def predict_proba(self,X):
+        X_in=X
+        for i in range(len(self.layers)):
+            X_in=self.activate_layer(i,X_in)
+        return X_in
+
+    def overweight_best_estimator(self):
+        self.layers[0].overweight_best_estimator(self.X_sets,self.y_sets)
+
+    def evaluate(self,X_test,y_test):
+        auc={}
+        X_in=X_test
+        for i in range(len(self.layers)):
+            layer_name="Layer "+str(i)
+            auc[layer_name]={}
+            X_in=self.activate_layer(i,X_in)
+            for j in range(np.shape(X_in)[1]):
+                Y=np.array([1-x for x in X_in[:,j]])
+                estimator_name="Estimator "+str(j)
+                auc[layer_name][estimator_name]=roc_auc_score(y_test,Y)
+        return auc
+
 
 
 
@@ -209,8 +284,15 @@ def test_algo(source_list,target,X_train_list,y_train_list,X_test_list,y_test_li
     estimator,best_params=m.train(X_train,y_train)
 
     # Compute ROC on test
-    y_proba=estimator.predict_proba(X_test)
-    roc=roc_auc_score(y_test,y_proba[:,1])
+
+    if type(estimator)==svm.classes.SVC:
+        y_proba=estimator.decision_function(X_test)
+        y=(y_proba-np.min(y_proba))/(np.max(y_proba)-np.min(y_proba))
+        roc=roc_auc_score(y_test,y)
+    else:
+        y=estimator.predict_proba(X_test)
+        roc=roc_auc_score(y_test,y[:,0])
+    
 
     return roc,estimator,best_params
 
