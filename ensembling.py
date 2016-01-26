@@ -55,9 +55,9 @@ class Model:
         elif self.class_type=="rf": # Sklearn Random forest
             estimator=ensemble.RandomForestClassifier()
             params_to_try = {
-            'n_estimators': [50,100,300] ,
-            'min_samples_split': [3,7,10],
-            'min_samples_leaf': [3,7,10]
+            'n_estimators': [100,300,400] ,
+            'min_samples_split': [7,10,20],
+            'min_samples_leaf': [7,10,20]
             }
         else: # Add new classifier here
             print "Wrong classifier type. Must be one of : lr, nn, rf"
@@ -291,9 +291,8 @@ def test_algo(source_list,target,X_train_list,y_train_list,X_test_list,y_test_li
         roc=roc_auc_score(y_test,y)
     else:
         y=estimator.predict_proba(X_test)
-        roc=roc_auc_score(y_test,y[:,0])
+        roc=roc_auc_score(y_test,y[:,1])
     
-
     return roc,estimator,best_params
 
 
