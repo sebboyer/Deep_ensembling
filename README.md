@@ -29,7 +29,10 @@ Options include :
 
 ### How to use : Test models
 
-The script testing.py allows you to test you trained models. The following lines will test the AUC of all pre-trained models in 'TrainedModels.p' on the list of DataSet provided in X_test_list, y_test_list (second dimension of DataSets in X_test_list must be the same as the second dimensions of the DataSets used during training).
+The script testing.py allows you to test you trained models. More importantly it allows you to have them vote in a structured way that you can define. We provide a default structure :
+- create_net_func = create_simple_network : is a structure where all provided models vote in three different ways (classic sum-vote, rank-based vote, and normalized vote), then those three votes are aggregated using a last classic vote to produce the final output.
+
+The following lines will test the AUC of all pre-trained models in 'TrainedModels.p' on the list of DataSet provided in X_test_list, y_test_list (second dimension of DataSets in X_test_list must be the same as the second dimensions of the DataSets used during training).
 
 ```python
 import testing as test
@@ -47,11 +50,11 @@ target = 0
 courses = range(len(X_test_list))
 source_courses = [c for c in courses if c!= target]
 
-contracted_results = Ttest.contract_results(results,target,courses)
+contracted_results = test.contract_results(results,target,courses)
 contracted_results = test.contracted_result_toList(contracted_results,source_courses)
 
 problems_description = 'problem (12,6)'
 plot = ggplot_scores(contracted_results,target,source_courses,problems_description)
 plot
 ```
-![alt text]()
+<!--![alt text]()-->
