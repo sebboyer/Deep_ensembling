@@ -35,17 +35,17 @@ Options include :
 
 This package allows you to create from very simple to very complex "Ensembling method" always with very little code. 
 
-A structure is defined as an object from class 'Network'. When no 'links' between layers are mentionned the fully-connected option is default. We show the code to create the two structures shown in Figure 2.
+A structure is defined as an object from class 'Network'. When no 'links' between layers are mentionned the fully-connected option is default. We show the code to create the two structures shown in the figure below.
 
 ```python
 from ensembling import *
 
-#### First Structure 
+#### Structure A 
 N=Network() # Define Network
 N.add_layer("Models_layer",[]) # First layer
 N.add_layer("Output_layer",[Vote("simple")])  # Last Layer
 
-#### Second Structure 
+#### Structure B 
 N=Network() # Define Network
 N.add_layer("Models_layer",[]) # First layer
 
