@@ -331,6 +331,24 @@ def create_simple_network():
     
     return N
 
+'''
+Create the links needed to link to layers in an bucket-fashion (all models from the same sources are aggregated but not models across sources)
+Return the links ready to be set as argument to the layer
+
+'''
+def create_independent_links(n_estimators_per_source,n_sources,n_models_per_source):
+    links ={}
+    
+    course_estimators = {}
+    for s in range(n_sources):
+        course_estimators[s]=range(s*n_estimators_per_source,(s+1)*n_estimators_per_source)
+        
+    for s in range(n_sources):    
+        for m in range(n_models_per_source):
+            links[s*n_models_per_source+m]=course_estimators[s]
+            
+    return links
+
 
 
 
