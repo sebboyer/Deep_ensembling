@@ -32,10 +32,39 @@ Options include :
 
 ## How to use : Build Ensembling structure
 
-The capability of this package is the possiblity to create your own "Ensembling method" with very little code. 
+This package allows you to create from very simple to very complex "Ensembling method" always with very little code. 
 
-As an example, we provide a default structure :
-- create_net_func = create_simple_network : is a structure where all provided models vote in three different ways (classic sum-vote, rank-based vote, and normalized vote), then those three votes are aggregated using a last classic vote to produce the final output. The figure below illustrate this basic structure. This structure is displayed in Fidgure 1
+A structure is defined as an object from class 'Network'. When no 'links' between layers are mentionned the fully-connected option is default. We show the code to create the two structures shown in Figure 2.
+
+```python
+from ensembling import *
+
+#### First Structure 
+N=Network() # Define Network
+N.add_layer("Models_layer",[]) # First layer
+N.add_layer("Output_layer",[Vote("simple")])  # Last Layer
+
+#### Second Structure 
+N=Network() # Define Network
+N.add_layer("Models_layer",[]) # First layer
+
+n_input_models_per_source = 3 # Second layer
+n_sources = 3
+n_output_models_per_source = 2
+N.add_layer("Hidden_layer",[Vote("simple"),Vote("norm")])
+N.layers[1].links = create_independent_links(n_input_models_per_source,n_sources,n_output_models_per_source)
+
+N.add_layer("Hidden_layer",[Vote("simple"),Vote("rank"),Vote("norm")]) # Third Layer
+N.add_layer("Output_layer",[Vote("simple")])  # Fourth Layer
+```
+
+A default structure is provided, use :
+
+```python
+from ensembling import *
+
+N = create_simple_network()
+```
 
 
 ## How to use : Test models
