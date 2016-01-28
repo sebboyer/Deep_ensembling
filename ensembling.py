@@ -122,6 +122,7 @@ class Layer:
         self.name=name
         self.models=[]
         self.estimators=[]  # Trained models or votes
+        self.links = {} # {est_id:[list of children column to take into account]}
     
     # Models are functions of type : logreg_cv,nn_cv,rf_cv
     def add_model(self,model):
@@ -146,13 +147,25 @@ class Layer:
     def activate(self,X):
         #Trigger all estimators on X
         Y=[]
-        for m in self.estimators:
-            if type(m)==svm.classes.SVC:
-                y_proba=m.decision_function(X)
-                y=(y_proba-np.min(y_proba))/(np.max(y_proba)-np.min(y_proba))
-            else:
-                y=m.predict_proba(X)[:,0]
-            Y.append(y)
+        if self.links == {}: # If no links specified, fully connected
+            for m in self.estimators:
+                if type(m)==svm.classes.SVC:
+                    y_proba=m.decision_function(X)
+                    y=(y_proba-np.min(y_proba))/(np.max(y_proba)-np.min(y_proba))
+                else:
+                    y=m.predict_proba(X)[:,0]
+                Y.append(y)
+        else: # If links specified, then apply structure
+            for est_id in self.links:
+                m = self.estimators[est_id]
+                children = self.links[est_id]
+                X_feat = X[:,children]
+                if type(m)==svm.classes.SVC:
+                    y_proba=m.decision_function(X_feat)
+                    y=(y_proba-np.min(y_proba))/(np.max(y_proba)-np.min(y_proba))
+                else:
+                    y=m.predict_proba(X_feat)[:,0]
+                Y.append(y)
         Y=np.array(Y).T
         return Y
 
@@ -294,6 +307,29 @@ def test_algo(source_list,target,X_train_list,y_train_list,X_test_list,y_test_li
         roc=roc_auc_score(y_test,y[:,1])
     
     return roc,estimator,best_params
+
+###############################################################################
+########################## Network Creation ###################################
+###############################################################################
+'''
+Return a simple 3 Layers network build from the given estimators
+'''
+
+def create_simple_network():
+    
+    ### Define Network
+    N=Network()
+    # First layer
+    N.add_layer("Models_layer",[])
+    # Second Layer
+    N.add_layer("Hidden_layer",[Vote("simple"),Vote("rank"),Vote("norm")])
+    # Third Layer
+    N.add_layer("Output_layer",[Vote("simple")])
+
+    # Train Network (nothing here because only Vote models)
+    N.train()
+    
+    return N
 
 
 

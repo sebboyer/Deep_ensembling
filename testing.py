@@ -6,8 +6,6 @@ Test models
 
 '''
 
-
-
 ############# Dependencies
 import sys
 from dataFormat import *
@@ -19,61 +17,7 @@ from ggplot import *
 
 from multiprocessing import *
 from functools import partial
-
-
-
-###############################################################################
-########################## Network Creation ###################################
-###############################################################################
-'''
-Return a simple 3 Layers network build from the given estimators
-'''
-
-def create_simple_network(estimators):
-    
-    ### Define Network
-    N=Network()
-    # First layer
-    N.add_layer("Models_layer",[])
-    N.layers[0].add_estimators(estimators)
-    # Second Layer
-    N.add_layer("Hidden_layer",[Vote("simple"),Vote("rank"),Vote("norm")])
-    # Third Layer
-    N.add_layer("Output_layer",[Vote("simple")])
-
-    # Train Network (nothing here because only Vote models)
-    N.train()
-    
-    return N
-
-'''
-Return a 3 Layers network whose best estimator (only trainset) is overweitghed
-'''
-def create_weighted_network(X_train,y_train,estimators):
-    
-    ### Define Network
-    N=Network()
-    # First layer
-    N.add_layer("Models_layer",[])
-    N.layers[0].add_estimators(estimators)
-    # Second Layer
-    N.add_layer("Hidden_layer",[Vote("simple"),Vote("rank"),Vote("norm")])
-    # Third Layer
-    N.add_layer("Output_layer",[Vote("simple")])
-
-    ### Add train data to Network
-    N.add_trainSet(X_train,y_train)
-
-    ### Repeat best estimator on training data
-    N.overweight_best_estimator()
-
-    # Train Network (nothing here because only Vote models)
-    N.train()
-    
-    return N
-
-
-
+import copy
 
 
 ###############################################################################
@@ -84,7 +28,7 @@ Test models in individual_models for all DataSet in X_test_list, y_test_list
 Args :  models, list of problems (target week, feature week), structure of network to use, list of X, list of y , list of models to skip in ['lr','svm','nn','rf']
 Returns : results[pb][target][source] contains the corresponding AUC on test for the given network of estimators
 '''
-def test_all_models(individual_models,X_test_list,y_test_list,DataSets=[],create_net_func=create_simple_network,para=0,skip_models=[]):
+def test_all_models(individual_models,X_test_list,y_test_list,network,DataSets=[],para=0,skip_models=[]):
 
     if DataSets==[]:
         DataSets=range(len(X_test_list))
@@ -100,12 +44,12 @@ def test_all_models(individual_models,X_test_list,y_test_list,DataSets=[],create
     ##### Fill results
     if para==1:
         pool = Pool()
-        partial_test_model = partial(test_model,individual_models,DataSets,create_net_func,X_test_list,y_test_list,skip_models)
+        partial_test_model = partial(test_model,individual_models,DataSets,network,X_test_list,y_test_list,skip_models)
         estimators_list = pool.map(partial_test_model, DataSets)
     else:
         estimators_list = []
         for target in DataSets:
-            estimators_list.append(test_model(individual_models,DataSets,create_net_func,X_test_list,y_test_list,skip_models,target))
+            estimators_list.append(test_model(individual_models,DataSets,network,X_test_list,y_test_list,skip_models,target))
     
     # Transform list into dictionnary
     for i,estimator_dic in enumerate(estimators_list):
@@ -113,25 +57,27 @@ def test_all_models(individual_models,X_test_list,y_test_list,DataSets=[],create
 
     return results
 
-def test_model(individual_models,DataSets,create_net_func,X_test_list,y_test_list,skip_models,target):
+def test_model(individual_models,DataSets,network,X_test_list,y_test_list,skip_models,target):
 
     results = {}
     X_test = X_test_list[target]
     y_test = y_test_list[target]
     potential_sources = [c for c in DataSets if c!=target]
 
+    networks = [copy.deepcopy(network) for i in range(len(potential_sources)+1)]
+
     # Only Network built from one source
-    for source in potential_sources: 
+    for j,source in enumerate(potential_sources): 
         estimators = [individual_models[source][i] for i in individual_models[source] if i not in skip_models]
-        N = create_net_func(estimators)
-        results[source] = N.evaluate(X_test,y_test)
+        networks[j].layers[0].add_estimators(estimators)
+        results[source] = networks[j].evaluate(X_test,y_test)
     
     # Networks built from all individual models
     estimators = [] # Networks built from all individual models
     for source in potential_sources :
         estimators.extend([individual_models[source][i] for i in individual_models[source] if i not in skip_models])
-        N = create_net_func(estimators)
-        results['all'] = N.evaluate(X_test,y_test)
+    networks[-1].layers[0].add_estimators(estimators)
+    results['all'] = networks[-1].evaluate(X_test,y_test)
 
     return results
 
