@@ -8,7 +8,7 @@ Deep_ensembing is a package that let you train models on different data-sets and
 
 This package let you define easily what kind of classification model to build and how to combine them. The outcome of the workflow is a robust predictive model that is likely to perform very well on a new data source.
 
-## How to us : Train models
+## How to use : Train models
 
 The script training.py allows you to train multiple binary models on multiple training Datasets in parallel.
 The following lines will train a LogisticRegression, a NearestNeighbor and a RandomForest classifier on the list of dataset provided in X_train_list and y_train_list (each of the data in the list X_train_list must share the same second dimension) :
@@ -26,6 +26,16 @@ This will pickle the trained models in output_filename.
 Options include :
 - para : if para=1 run in parallel 
 - model_type : if model_type='concat' trained concatenated models (concatenate all dataSet but one and train models on this concatenation, do it for each hold-out DataSet).
+
+## How to use : Build Ensembling structure
+
+The capability of this package is the possiblity to create your own "Ensembling method" with very little code. 
+
+As an example, we provide a default structure :
+- create_net_func = create_simple_network : is a structure where all provided models vote in three different ways (classic sum-vote, rank-based vote, and normalized vote), then those three votes are aggregated using a last classic vote to produce the final output. The figure below illustrate this basic structure.
+
+![](example_output.png)
+
 
 ## How to use : Test models
 
