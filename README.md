@@ -9,7 +9,7 @@ Deep_ensembing is a package that let you train models on different data-sets and
 This package let you define easily what kind of classification model to build and how to combine them. The outcome of the workflow is a robust predictive model that is likely to perform very well on a new data source.
 
 Figure 1 : Example of an Ensembling structure
-![An example of a simpel Ensembling structure](structure.jpg)
+![An example of a simpel Ensembling structure](Pictures/why.jpg)
 
 ## How to use : Train models
 
@@ -25,6 +25,8 @@ output_filename = 'TrainedModels.p'
 train.main(X_train_list,y_train_list,model_list,params_list,output_filename=output_filename)
 ```
 This will pickle the trained models in output_filename.
+
+![](Pictures/structure2.jpg)
 
 Options include :
 - para : if para=1 run in parallel 
@@ -57,6 +59,7 @@ N.layers[1].links = create_independent_links(n_input_models_per_source,n_sources
 N.add_layer("Hidden_layer",[Vote("simple"),Vote("rank"),Vote("norm")]) # Third Layer
 N.add_layer("Output_layer",[Vote("simple")])  # Fourth Layer
 ```
+![](Pictures/examples.jpg)
 
 A default structure is provided, use :
 
