@@ -8,6 +8,9 @@ Deep_ensembing is a package that let you train models on different data-sets and
 
 This package let you define easily what kind of classification model to build and how to combine them. The outcome of the workflow is a robust predictive model that is likely to perform very well on a new data source.
 
+Figure 1 : Example of an Ensembling structure
+![An example of a simpel Ensembling structure](structure.jpg)
+
 ## How to use : Train models
 
 The script training.py allows you to train multiple binary models on multiple training Datasets in parallel.
@@ -32,9 +35,7 @@ Options include :
 The capability of this package is the possiblity to create your own "Ensembling method" with very little code. 
 
 As an example, we provide a default structure :
-- create_net_func = create_simple_network : is a structure where all provided models vote in three different ways (classic sum-vote, rank-based vote, and normalized vote), then those three votes are aggregated using a last classic vote to produce the final output. The figure below illustrate this basic structure.
-
-![An example of a simpel Ensembling structure](structure.jpg)
+- create_net_func = create_simple_network : is a structure where all provided models vote in three different ways (classic sum-vote, rank-based vote, and normalized vote), then those three votes are aggregated using a last classic vote to produce the final output. The figure below illustrate this basic structure. This structure is displayed in Fidgure 1
 
 
 ## How to use : Test models
