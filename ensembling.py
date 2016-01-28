@@ -131,10 +131,10 @@ class Layer:
     def train_models(self,X=None,y=None):
         estimators=[]
         for m in self.models:
-            if isinstance(m,Model): # If model is of class Model: train + append
+            if isinstance(m,Model): # If m is of class Model: train + append
                 estimator,params=m.train(X,y)
                 estimators.append(estimator)
-            else: # If model is of class Vote : append it
+            else: # If m is of class Vote : append it
                 estimators.append(m)
         self.add_estimators(estimators)
         return estimators
