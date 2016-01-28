@@ -287,7 +287,7 @@ def test_algo(source_list,target,X_train_list,y_train_list,X_test_list,y_test_li
 
     if type(estimator)==svm.classes.SVC:
         y_proba=estimator.decision_function(X_test)
-        y=(y_proba-np.min(y_proba))/(np.max(y_proba)-np.min(y_proba))
+        y=1-(y_proba-np.min(y_proba))/(np.max(y_proba)-np.min(y_proba))
         roc=roc_auc_score(y_test,y)
     else:
         y=estimator.predict_proba(X_test)
