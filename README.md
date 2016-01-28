@@ -34,7 +34,7 @@ The capability of this package is the possiblity to create your own "Ensembling 
 As an example, we provide a default structure :
 - create_net_func = create_simple_network : is a structure where all provided models vote in three different ways (classic sum-vote, rank-based vote, and normalized vote), then those three votes are aggregated using a last classic vote to produce the final output. The figure below illustrate this basic structure.
 
-![](example_output.png)
+![An example of a simpel Ensembling structure](structure.jpg)
 
 
 ## How to use : Test models
