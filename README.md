@@ -8,7 +8,6 @@ Deep_ensembing is a package that let you train models on different data-sets and
 
 This package let you define easily what kind of classification model to build and how to combine them. The outcome of the workflow is a robust predictive model that is likely to perform very well on a new data source.
 
-Figure 1 : Example of an Ensembling structure
 ![An example of a simpel Ensembling structure](Pictures/why.jpg)
 
 ## How to use : Train models
@@ -84,20 +83,8 @@ import pickle
 models = pickle.load(open('TrainedModels.p','rb'))
 results = test.test_all_models(models,X_test_list,y_test_list)
 ```
-You can also visualize the AUC of the models on different test DataSet.
 
-```python
-import testing as test
-
-target = 0
-courses = range(len(X_test_list))
-source_courses = [c for c in courses if c!= target]
-
-contracted_results = test.contract_results(results,target,courses)
-contracted_results = test.contracted_result_toList(contracted_results,source_courses)
-
-problems_description = 'problem (12,6)'
-plot = ggplot_scores(contracted_results,target,source_courses,problems_description)
-plot
-```
-![](example_output.png)
+Options inlcude :
+- skip_models : list of model names to skip (among 'lr', 'nn', 'rf', 'svm')
+- para : if para=1 run test in parallel
+- DataSets : list of source index to take into account (default is all)
