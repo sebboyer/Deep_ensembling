@@ -67,4 +67,4 @@ problems_description = 'problem (12,6)'
 plot = ggplot_scores(contracted_results,target,source_courses,problems_description)
 plot
 ```
-<!--![alt text]()-->
+![](example_output.png)
