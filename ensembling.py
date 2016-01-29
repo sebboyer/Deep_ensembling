@@ -85,10 +85,12 @@ class Model:
 # - simple : sum the results
 # - norm : normalize the results of each classifier so that min=0 and max=1 and then sum
 # - rank : rank each probability inside each classifier and average them
+# - weighted : weighted sum of the results. Need to give weights as inputs 
 
 class Vote:
-    def __init__(self,vote_type):
+    def __init__(self,vote_type,weights=[]):
         self.vote_type=vote_type
+        self.weights = weights
 
     def __name__(self):
         return "Vote"
@@ -104,6 +106,11 @@ class Vote:
             y_pred_rank=[ss.rankdata(X[:,i])/float(np.shape(X)[0]) for i in range(d)]
             y_pred_rank=np.array(y_pred_rank).T
             y_vote=np.array([np.sum(y_pred_rank,axis=1)/float(d)]).T
+        elif self.vote_type == 'weighted':
+            if len(self.weights)!=d:
+                print "Wrong number of weights"
+            else:
+                y_vote = np.array([np.sum(self.weights*X,axis=1)/float(d)]).T
         else:
             y_vote=np.array([np.sum(X,axis=1)/float(d)]).T
         
@@ -228,14 +235,18 @@ class Network:
             estimators=self.layers[0].train_models(X,y)
         return 0
 
-    def train_NonFirst_layer(self,layer_n):
-        self.layers[layer_n].train_models()
+    def train_NonFirst_layer(self,layer_n,X=None,y=None):
+        X_in = X
+        if X_in != None:
+            for i in range(layer_n):
+                X_in=self.activate_layer(i,X_in)
+        self.layers[layer_n].train_models(X_in,y)
 
-    def train(self):
+    def train(self,X=None,y=None):
         self.train_first_layer()
         if len(self.layers)>1:
             for i in range(1,len(self.layers)):
-                self.train_NonFirst_layer(i)
+                self.train_NonFirst_layer(i,X,y)
         return 0
     
     def activate_layer(self,layer_n,X_in):
@@ -289,13 +300,13 @@ def test_single_model(estimator,X_test,y_test):
     
     if type(estimator)==svm.classes.SVC:
         y_proba=estimator.decision_function(X_test)
-        y=1-(y_proba-np.min(y_proba))/(np.max(y_proba)-np.min(y_proba))
+        y=(y_proba-np.min(y_proba))/(np.max(y_proba)-np.min(y_proba))
         roc=roc_auc_score(y_test,y)
     else:
         y=estimator.predict_proba(X_test)
         roc=roc_auc_score(y_test,y[:,1])
         
-    return roc  
+    return roc   
 
 # Train and test classifier of type class_type on the concatenated data from source_list
 def test_algo(source_list,target,X_train_list,y_train_list,X_test_list,y_test_list,class_type,Cmin,Cmax):
@@ -315,46 +326,7 @@ def test_algo(source_list,target,X_train_list,y_train_list,X_test_list,y_test_li
     
     return roc,estimator,best_params
 
-###############################################################################
-########################## Network Creation ###################################
-###############################################################################
-'''
-Return a simple 3 Layers network build from the given estimators
-'''
 
-def create_simple_network():
-    
-    ### Define Network
-    N=Network()
-    # First layer
-    N.add_layer("Models_layer",[])
-    # Second Layer
-    N.add_layer("Hidden_layer",[Vote("simple"),Vote("rank"),Vote("norm")])
-    # Third Layer
-    N.add_layer("Output_layer",[Vote("simple")])
-
-    # Train Network (nothing here because only Vote models)
-    N.train()
-    
-    return N
-
-'''
-Create the links needed to link to layers in an bucket-fashion (all models from the same sources are aggregated but not models across sources)
-Return the links ready to be set as argument to the layer
-
-'''
-def create_independent_links(n_estimators_per_source,n_sources,n_models_per_source):
-    links ={}
-    
-    course_estimators = {}
-    for s in range(n_sources):
-        course_estimators[s]=range(s*n_estimators_per_source,(s+1)*n_estimators_per_source)
-        
-    for s in range(n_sources):    
-        for m in range(n_models_per_source):
-            links[s*n_models_per_source+m]=course_estimators[s]
-            
-    return links
 
 
 
