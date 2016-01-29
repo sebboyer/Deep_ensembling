@@ -283,6 +283,20 @@ def concatenate(source_list,X_train_list,y_train_list):
         
     return X_train,y_train
 
+# Test a single estimator on X_test,y_test
+# Returns ROC-AUC
+def test_single_model(estimator,X_test,y_test):
+    
+    if type(estimator)==svm.classes.SVC:
+        y_proba=estimator.decision_function(X_test)
+        y=1-(y_proba-np.min(y_proba))/(np.max(y_proba)-np.min(y_proba))
+        roc=roc_auc_score(y_test,y)
+    else:
+        y=estimator.predict_proba(X_test)
+        roc=roc_auc_score(y_test,y[:,1])
+        
+    return roc  
+
 # Train and test classifier of type class_type on the concatenated data from source_list
 def test_algo(source_list,target,X_train_list,y_train_list,X_test_list,y_test_list,class_type,Cmin,Cmax):
 
@@ -297,14 +311,7 @@ def test_algo(source_list,target,X_train_list,y_train_list,X_test_list,y_test_li
     estimator,best_params=m.train(X_train,y_train)
 
     # Compute ROC on test
-
-    if type(estimator)==svm.classes.SVC:
-        y_proba=estimator.decision_function(X_test)
-        y=1-(y_proba-np.min(y_proba))/(np.max(y_proba)-np.min(y_proba))
-        roc=roc_auc_score(y_test,y)
-    else:
-        y=estimator.predict_proba(X_test)
-        roc=roc_auc_score(y_test,y[:,1])
+    roc = test_single_model(estimator,X_test,y_test)
     
     return roc,estimator,best_params
 
