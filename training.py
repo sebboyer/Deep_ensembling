@@ -69,21 +69,24 @@ def train_model(X_train_list,X_test_list,y_train_list,y_test_list,model_list,par
     return dic
 
 
-def train_concatenated_models(X_train_list,X_test_list,y_train_list,y_test_list,model_list,params_list):
+def train_concatenated_models(X_train_list,y_train_list,model_list,params_list,para = 0):
 
     # Initialize results
     dic={}
-    
-    ##### Train models for each DataSet separately
-    target=0 # Target doesn't matter because we don't remember evaluation (only estimator)
 
     # Train models in parallel for each source courses
-    pool = Pool()
     all_dataSets = range(len(X_train_list))
-    list_sources = [all_dataSets for i in all_dataSets]
-    for i in all_dataSets:
-        list_sources[i].remove(i)
-    estimators_list = pool.map(train_model, list_sources)
+    all_dataSets_mult = [all_dataSets for i in all_dataSets]
+    list_sources = [[i for i in all_dataSets_mult[j] if i!=j] for j in all_dataSets]
+
+    if para==1:
+        pool = Pool()
+        partial_train_model = partial(train_concat_model,X_train_list,X_train_list,y_train_list,y_train_list,model_list,params_list)
+        estimators_list = pool.map(partial_train_model, list_sources)
+    else:
+        estimators_list = []
+        for sources in list_sources:
+            estimators_list.append(train_concat_model(X_train_list,X_train_list,y_train_list,y_train_list,model_list,params_list,sources))
     
     # Transform list into dictionnary
     for i,estimator_dic in enumerate(estimators_list):
@@ -91,10 +94,11 @@ def train_concatenated_models(X_train_list,X_test_list,y_train_list,y_test_list,
     
     return dic
 
-def train_concat_model(sources):
+def train_concat_model(X_train_list,X_test_list,y_train_list,y_test_list,model_list,params_list,sources):
 
     print "##### Train for DataSets : ",sources
     dic={}
+    target = sources[0] # We don't remember AUC anyways
     
     for i,model in enumerate(model_list):
         print "# Training "+model
@@ -117,5 +121,7 @@ def main(X_train_list,y_train_list,model_list,params_list,model_type='ind',outpu
 
     dic=train_func(X_train_list,y_train_list,model_list,params_list)
     pickle.dump(dic,open( output_filename, "wb" ) )
+
+    return dic
 
 
