@@ -158,7 +158,7 @@ class Layer:
             for m in self.estimators:
                 if type(m)==svm.classes.SVC:
                     y_proba=m.decision_function(X)
-                    y=(y_proba-np.min(y_proba))/(np.max(y_proba)-np.min(y_proba))
+                    y=1-(y_proba-np.min(y_proba))/(np.max(y_proba)-np.min(y_proba))
                 else:
                     y=m.predict_proba(X)[:,0]
                 Y.append(y)
@@ -169,7 +169,7 @@ class Layer:
                 X_feat = X[:,children]
                 if type(m)==svm.classes.SVC:
                     y_proba=m.decision_function(X_feat)
-                    y=(y_proba-np.min(y_proba))/(np.max(y_proba)-np.min(y_proba))
+                    y=1-(y_proba-np.min(y_proba))/(np.max(y_proba)-np.min(y_proba))
                 else:
                     y=m.predict_proba(X_feat)[:,0]
                 Y.append(y)
