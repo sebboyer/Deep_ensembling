@@ -59,9 +59,9 @@ def create_independent_links(n_estimators_per_source,n_sources,n_models_per_sour
 '''
 Dump a network structure to a .p file
 '''
-def create_net(network,name):
-    network.train()
-    pickle.dump(network,open("Network_"+name+'.p','wb'))
+def create_net(network,folder,name,X_train=None,y_train=None):
+    network.train(X_train,y_train)
+    pickle.dump(network,open(folder+"Network_"+name+'.p','wb'))
 
 '''
 Load a network structure from a .p file
