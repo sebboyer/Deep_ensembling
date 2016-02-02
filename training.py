@@ -109,7 +109,7 @@ def train_concat_model(X_train_list,X_test_list,y_train_list,y_test_list,model_l
     return dic
 
 
-def main(X_train_list,y_train_list,model_list,params_list,model_type='ind',output_filename='models.p'):
+def main(X_train_list,y_train_list,model_list,params_list,model_type='ind',output_filename='models.p',pic = 0):
 
 
     train_func = 0
@@ -120,7 +120,9 @@ def main(X_train_list,y_train_list,model_list,params_list,model_type='ind',outpu
 
 
     dic=train_func(X_train_list,y_train_list,model_list,params_list)
-    pickle.dump(dic,open( output_filename, "wb" ) )
+
+    if pic==1:
+        pickle.dump(dic,open( output_filename, "wb" ) )
 
     return dic
 
