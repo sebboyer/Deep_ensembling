@@ -18,10 +18,10 @@ The following lines will train a LogisticRegression, a NearestNeighbor and a Ran
 ```python
 import training as train
 
-model_list = ['lr','rf','nn']
-params_list = [(1,4),(0,0),(80,150)]
-output_filename = 'TrainedModels.p'
-train.main(X_train_list,y_train_list,model_list,params_list,output_filename=output_filename)
+model_list = ['lr','rf','nn']  # The models you want to train ('lr','rf','nn' or 'svm')
+params_list = [(1,4),(0,0),(80,150)] # The associated parameters range
+output_filename = 'TrainedModels.p' # The name of the output files where estimators will be saved
+train.main(X_train_list,y_train_list,model_list,params_list,output_filename=output_filename) # Train !
 ```
 This will pickle the trained models in output_filename.
 
@@ -31,11 +31,11 @@ Options include :
 - para : if para=1 run in parallel 
 - model_type : if model_type='concat' trained concatenated models (concatenate all dataSet but one and train models on this concatenation, do it for each hold-out DataSet).
 
-## How to use : Build Ensembling structure
+## How to use : Build Ensembling Structures
 
-This package allows you to create from very simple to very complex "Ensembling method" always with very little code. 
+This package allows you to create your own from very simple to very complex "Ensembling method". 
 
-A structure is defined as an object from class 'Network'. When no 'links' between layers are mentionned the fully-connected option is default. We show the code to create the two structures shown in the figure below.
+A structure is defined as an object from class 'Network'. When no 'links' between layers are mentionned the default is fully-connected. We show code to create the two structures shown in the figure below.
 
 ```python
 from ensembling import *
@@ -60,28 +60,25 @@ N.add_layer("Output_layer",[Vote("simple")])  # Fourth Layer
 ```
 ![](Pictures/examples.jpg)
 
-A default structure is provided, use :
+Some default structures are provided in '/Structures/'
 
 ```python
-from ensembling import *
+from create_network import *
 
-N = create_simple_network()
+net_name = 'Network_1L_simple'
+network = load_net(net_name) # This is a network
 ```
-
 
 ## How to use : Test models
 
 The script testing.py allows you to test you trained models. More importantly it allows you to have them vote in a structured way that you can define. We provide a default structure :
-- create_net_func = create_simple_network : is a structure where all provided models vote in three different ways (classic sum-vote, rank-based vote, and normalized vote), then those three votes are aggregated using a last classic vote to produce the final output.
 
-The following lines will test the AUC of all pre-trained models in 'TrainedModels.p' on the list of DataSet provided in X_test_list, y_test_list (second dimension of DataSets in X_test_list must be the same as the second dimensions of the DataSets used during training).
+The following lines will test the AUC of the 'network' with the 'estimators' on X_test,y_test (X_train and y_train are used only if the network involve 'meta-model' or 'stacking' and therefore need to be trained).
 
 ```python
 import testing as test
-import pickle
 
-models = pickle.load(open('TrainedModels.p','rb'))
-results = test.test_all_models(models,X_test_list,y_test_list)
+auc_results = train_and_test(network,estimators,X_train,y_train,X_test,y_test)
 ```
 
 Options inlcude :
