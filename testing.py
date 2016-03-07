@@ -8,6 +8,7 @@ Test models
 
 ############# Dependencies
 import sys
+sys.path.append('/Users/sebboyer/Documents/ALFA/data_copy/features')
 from dataFormat import *
 from visua import *
 from ensembling import *
@@ -30,14 +31,22 @@ import pickle
 class Ensemble:
     def __init__(self,estimators,network):
         self.estimators=estimators
-        self.network = network
+        self.network = pickle.load(open(network_file,"rb"))
 
-    def train(self,X_train,y_train):
+    def train(self,course,pb,feat_set=0):
+
+        if feat_set==0:
+            feat_set = course.feature_set
+        X_train,y_train = course.extract_pb_feature([pb[1]],pb[0],feat_set)
+
         self.network.layers[0].add_estimators(self.estimators)
         self.network.train(X_train,y_train)
 
-    def eval(self,X_test,y_test):
-        return self.network.evaluate(X_test,y_test)
+    def eval(self,course,pb,feat_set=0):
+        if feat_set==0:
+            feat_set = course.feature_set
+        X,y = course.extract_pb_feature([pb[1]],pb[0],feat_set)
+        return self.network.evaluate(X,y)
 
 
 
