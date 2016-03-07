@@ -138,12 +138,26 @@ class Layer:
     # Train models one by one and include estimators in self.estimators
     def train_models(self,X=None,y=None):
         estimators=[]
-        for m in self.models:
-            if isinstance(m,Model): # If m is of class Model: train + append
-                estimator,params=m.train(X,y)
-                estimators.append(estimator)
-            else: # If m is of class Vote : append it
-                estimators.append(m)
+
+        if self.links != {}:
+            for i,est_id in enumerate(self.links):
+                m = self.models[est_id]
+
+                if isinstance(m,Model): # If m is of class Model: train + append
+                    children = self.links[est_id]
+                    X_feat = X[:,children]
+                    estimator,params=m.train(X_feat,y)
+                    estimators.append(estimator)
+                else: # If m is of class Vote : append it
+                    estimators.append(m)
+        else:
+            for m in self.models:
+                if isinstance(m,Model): # If m is of class Model: train + append
+                    estimator,params=m.train(X,y)
+                    estimators.append(estimator)
+                else: # If m is of class Vote : append it
+                    estimators.append(m)
+
         self.add_estimators(estimators)
         return estimators
         
@@ -163,7 +177,7 @@ class Layer:
                     y=m.predict_proba(X)[:,0]
                 Y.append(y)
         else: # If links specified, then apply structure
-            for est_id in self.links:
+            for i,est_id in enumerate(self.links):
                 m = self.estimators[est_id]
                 children = self.links[est_id]
                 X_feat = X[:,children]
