@@ -86,9 +86,9 @@ res = ens.eval(X_test,y_test) # Evaluate each estimator on each layer of the ens
 
 plot_graph(net,results = res) # Plot ensembling results
 ```
-![](Pictures/s1.jpg)
+![](Pictures/s1.png)
 
-![](Pictures/s6.jpg)
+![](Pictures/s6.png)
 
 <!--Options inlcude :-->
 <!--- skip_models : list of model names to skip (among 'lr', 'nn', 'rf', 'svm')-->
