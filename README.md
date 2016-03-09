@@ -8,7 +8,7 @@ Deep_ensembing is a package that let you train models on different data-sets and
 
 This package let you define easily what kind of classification model to build and how to combine them. The outcome of the workflow is a robust predictive model that is likely to perform very well on a new data source.
 
-![Majority Vote Illustration](Pictures/Marity_vote.jpg)
+![Majority Vote Illustration](Pictures/Majority_vote.jpg)
 
 In http://rduin.nl/papers/paa_03_vote.pdf, Kuncheva et al proved that the upper bound of the majority rule for L classifiers each of accuracy p was pL/(L/2+1).
 
