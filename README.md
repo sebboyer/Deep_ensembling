@@ -8,7 +8,7 @@ Deep_ensembing is a package that let you train models on different data-sets and
 
 This package let you define easily what kind of classification model to build and how to combine them. The outcome of the workflow is a robust predictive model that is likely to perform very well on a new data source.
 
-![](Pictures/Majority.vote.pdf)
+![Majority Vote Illustration](Pictures/Majority.vote.jpg)
 
 ## How to use : Train models
 
