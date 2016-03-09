@@ -29,23 +29,16 @@ import pickle
 ###############################################################################
 
 class Ensemble:
-    def __init__(self,estimators,network):
+    def __init__(self,estimators,network_file):
         self.estimators=estimators
         self.network = pickle.load(open(network_file,"rb"))
 
-    def train(self,course,pb,feat_set=0):
-
-        if feat_set==0:
-            feat_set = course.feature_set
-        X_train,y_train = course.extract_pb_feature([pb[1]],pb[0],feat_set)
+    def train(self,X_train,y_train):
 
         self.network.layers[0].add_estimators(self.estimators)
         self.network.train(X_train,y_train)
 
-    def eval(self,course,pb,feat_set=0):
-        if feat_set==0:
-            feat_set = course.feature_set
-        X,y = course.extract_pb_feature([pb[1]],pb[0],feat_set)
+    def eval(self,X,y):
         return self.network.evaluate(X,y)
 
 
