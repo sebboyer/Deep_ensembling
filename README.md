@@ -76,12 +76,18 @@ The script testing.py allows you to test you trained models. More importantly it
 The following lines will test the AUC of the 'network' with the 'estimators' on X_test,y_test (X_train and y_train are used only if the network involve 'meta-model' or 'stacking' and therefore need to be trained).
 
 ```python
-import testing as test
+from testing import *
 
-auc_results = train_and_test(network,estimators,X_train,y_train,X_test,y_test)
+ens = Ensemble(estimators,network_file) # Define Ensembling method
+plot_graph(net) # Plot ensembling structure
+
+ens.train(X_val,y_val) # Train the meta models on some validation data
+res = ens.eval(X_test,y_test) # Evaluate each estimator on each layer of the ensembling structure
+
+plot_graph(net,results = res) # Plot ensembling results
 ```
 
-Options inlcude :
-- skip_models : list of model names to skip (among 'lr', 'nn', 'rf', 'svm')
-- para : if para=1 run test in parallel
-- DataSets : list of source index to take into account (default is all)
+<!--Options inlcude :-->
+<!--- skip_models : list of model names to skip (among 'lr', 'nn', 'rf', 'svm')-->
+<!--- para : if para=1 run test in parallel-->
+<!--- DataSets : list of source index to take into account (default is all)-->
