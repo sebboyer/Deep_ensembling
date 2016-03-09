@@ -10,7 +10,7 @@ This package let you define easily what kind of classification model to build an
 
 ![Majority Vote Illustration](Pictures/Majority_vote.jpg)
 
-In http://rduin.nl/papers/paa_03_vote.pdf, Kuncheva et al proved that the upper bound of the majority rule for $$L$$ classifiers each of accuracy $$p$$ was $$\frac{p L}{\frac{L}{2}+1}$$.
+In http://rduin.nl/papers/paa_03_vote.pdf, Kuncheva et al proved that the upper bound of the majority rule for L classifiers each of accuracy p was pL/(L/2+1).
 
 ## How to use : Train models
 
