@@ -20,24 +20,24 @@
 
     <section class="main-content">
       <h2>
-<a id="what-is-deep_ensembling-" class="anchor" href="#what-is-deep_ensembling-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>What is Deep_ensembling ?.</h2>
+<a id="what-is-deep_ensembling-" class="anchor" href="#what-is-deep_ensembling-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>What is Deep_ensembling ?</h2>
 
 <p>Deep_ensembling is a package that let you train models on different data-sets and combine their prediction to build a robust predictive model. This package is intended to prediction problems meeting the following criteria :</p>
 
 <ul>
 <li>Several full data sources (both features and outcomes available) available</li>
-<li>A binary classification problem
-This package let you define easily what kind of classification model to build and how to combine them. The outcome of the workflow is a robust predictive model that is likely to perform very well on a new data source.</li>
+<li>A binary classification problem</li>
 </ul>
+
+<p>This package let you define easily what kind of classification model to build and how to combine them. The outcome of the workflow is a robust predictive model that is likely to perform very well on a new data source.</p>
 
 <h2>
 <a id="how-to-use-it-" class="anchor" href="#how-to-use-it-" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>How to use it ?</h2>
 
 <h3>
-<a id="training-ensemble-models" class="anchor" href="#training-ensemble-models" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Training ensemble models</h3>
+<a id="training-predictive-models" class="anchor" href="#training-predictive-models" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Training predictive models</h3>
 
-<p>The script training.py allows you to train multiple binary models on multiple training Datasets in parallel.
-The following lines will train a LogisticRegression, a NearestNeighbor and a RandomForest classifier on the list of dataset provided in X_train_list and y_train_list (each of the data in the list X_train_list must share the same second dimension) :</p>
+<p>The script training.py allows you to train multiple binary models on multiple training Datasets in parallel thanks to the cross validation framework of this sklearn library. The following lines will train a LogisticRegression, a NearestNeighbor and a RandomForest classifier on the list of dataset provided in X_train_list and y_train_list (each of the data in the list X_train_list must share the same second dimension) :</p>
 
 <div class="highlight highlight-source-python"><pre><span class="pl-k">import</span> training <span class="pl-k">as</span> train
 
@@ -47,7 +47,7 @@ output_filename <span class="pl-k">=</span> <span class="pl-s"><span class="pl-p
 train.main(<span class="pl-c1">X_train_list</span>,y_train_list,model_list,params_list,<span class="pl-v">output_filename</span><span class="pl-k">=</span>output_filename) <span class="pl-c"># Train !</span></pre></div>
 
 <h3>
-<a id="creating-ensembles" class="anchor" href="#creating-ensembles" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Creating Ensembles</h3>
+<a id="creating-ensemble-models" class="anchor" href="#creating-ensemble-models" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Creating Ensemble models</h3>
 
 <p>This package allows you to create your own from very simple to very complex "Ensembling method". </p>
 
@@ -74,7 +74,7 @@ n_output_models_per_source <span class="pl-k">=</span> <span class="pl-c1">2</sp
 <span class="pl-c1">N</span>.add_layer(<span class="pl-s"><span class="pl-pds">"</span>Output_layer<span class="pl-pds">"</span></span>,[Vote(<span class="pl-s"><span class="pl-pds">"</span>simple<span class="pl-pds">"</span></span>)])  <span class="pl-c"># Fourth Layer</span></pre></div>
 
 <h3>
-<a id="testing-ensemble-models" class="anchor" href="#testing-ensemble-models" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Testing ensemble models</h3>
+<a id="testing-ensemble-models" class="anchor" href="#testing-ensemble-models" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Testing Ensemble models</h3>
 
 <p>The script testing.py allows you to test you trained models. More importantly it allows you to have them vote in a structured way that you can define. We provide a default structure :</p>
 
