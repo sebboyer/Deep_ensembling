@@ -93,7 +93,7 @@ y_pred = ens.network.predict(X_test) # Forward pass in network to get final pred
 ## Example : MNIST Digits
 This is a simple example with only 1 dataset. 
 
-Preparing data
+Preparing data for the task of classifying odd vs even hand-written digits.
 ```python
 from sklearn.datasets import load_digits
 
@@ -112,7 +112,7 @@ X_train, y_train = X[:n_train],y[:n_train]
 X_test, y_test = X[n_train:],y[n_train:]
 ```
 
-Learning predictors and ensembling structures. For several datasets, ```python [X_train] [y_train]``` should be replaced by two lists ```python X_train_list y_train_list```.
+Learning predictors and ensembling structures. For several datasets, ``` [X_train], [y_train]``` should be replaced by two lists ``` X_train_list, y_train_list```.
 ```python 
 model_list = ['lr','rf','nn']  # The models you want to train ('lr','rf','nn' or 'svm')
 params_list = [(1,4),(0,0),(6,7)] # The associated parameters range
@@ -122,18 +122,22 @@ estimators_list = list(itertools.chain(*[x.values() for x in estimators.values()
 
 Defining ensembling structure
 ```python
-N=Network() # Define Network
-N.add_layer("Models_layer",[]) # First layer
-N.add_layer("Output_layer",[ Model("lr",-3,6)])  # Last Layer
+Na=Network() # Define Network
+Na.add_layer("Models_layer",[]) # First layer
+Na.add_layer("Output_layer",[ Vote("simple")])  # Last Layer
+
+Nb=Network() # Define Network
+Nb.add_layer("Models_layer",[]) # First layer
+Nb.add_layer("Output_layer",[ Model("lr",-3,6)])  # Last Layer
 ```
 
 Apply struture to the set of estimators
 ```python
-ens = Ensemble(estimators_list,network=N) 
+ens = Ensemble(estimators_list,network=Na)  # resp Nb
 ens.train(X_train,y_train)
 y_pred = ens.network.predict(X_test)
 ```
 
 Accuracy on test 
 - Individual classifiers : lr (86%),rf (88%), nn (98.9%)
-- Network structure (99.4%)
+- Network structures : Na (99.2%)   Nb (99.4%)
