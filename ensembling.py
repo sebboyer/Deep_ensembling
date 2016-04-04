@@ -33,9 +33,9 @@ class Model:
 
     def __name__(self):
         return "Model"
-        
+
     def train(self,X,y):
-        
+
         # Initiate classifier type
         if self.class_type=="lr": # Sklearn Logistic regression
             estimator=linear_model.LogisticRegression()
@@ -55,13 +55,13 @@ class Model:
         elif self.class_type=="rf": # Sklearn Random forest
             estimator=ensemble.RandomForestClassifier()
             params_to_try = {
-            'n_estimators': [100,300,400] ,
-            'min_samples_split': [7,10,20],
-            'min_samples_leaf': [7,10,20]
+            'n_estimators': [100] , #100,300,400
+            'min_samples_split': [3,7], #7,10,20
+            'min_samples_leaf': [3,7] # 7,10,20
             }
         else: # Add new classifier here
             print "Wrong classifier type. Must be one of : lr, nn, rf"
-         
+
         # Find optimal parameters through 5-fold cross validation
         metric_score='roc_auc'
         gs = GridSearchCV(estimator,
@@ -69,7 +69,7 @@ class Model:
                           cv=5,
                           scoring=metric_score)
         gs.fit(X,  y)
-        
+
         # Return best estimator and best params
         return gs.best_estimator_,gs.best_params_
 
@@ -85,7 +85,7 @@ class Model:
 # - simple : sum the results
 # - norm : normalize the results of each classifier so that min=0 and max=1 and then sum
 # - rank : rank each probability inside each classifier and average them
-# - weighted : weighted sum of the results. Need to give weights as inputs 
+# - weighted : weighted sum of the results. Need to give weights as inputs
 
 class Vote:
     def __init__(self,vote_type,weights=[]):
@@ -94,11 +94,11 @@ class Vote:
 
     def __name__(self):
         return "Vote"
-        
+
     def predict_proba(self,X):
-        
+
         d=np.shape(X)[1]
-        
+
         if self.vote_type=='norm':
             y_norm=(X-np.min(X,axis=0))/(np.max(X,axis=0)-np.min(X,axis=0))
             y_vote=np.array([np.sum(y_norm,axis=1)/float(d)]).T
@@ -113,9 +113,9 @@ class Vote:
                 y_vote = np.array([np.sum(self.weights*X,axis=1)/float(d)]).T
         else:
             y_vote=np.array([np.sum(X,axis=1)/float(d)]).T
-        
+
         return y_vote
-        
+
 
 
 ###############################################################################
@@ -130,11 +130,11 @@ class Layer:
         self.models=[]
         self.estimators=[]  # Trained models or votes
         self.links = {} # {est_id:[list of children column to take into account]}
-    
+
     # Models are functions of type : logreg_cv,nn_cv,rf_cv
     def add_model(self,model):
         self.models.append(model)
-    
+
     # Train models one by one and include estimators in self.estimators
     def train_models(self,X=None,y=None):
         estimators=[]
@@ -146,11 +146,11 @@ class Layer:
                 estimators.append(m)
         self.add_estimators(estimators)
         return estimators
-        
+
     # Estimators must have a predict_proba methods
     def add_estimators(self,estimators):
         self.estimators.extend(estimators)
-    
+
     def activate(self,X):
         #Trigger all estimators on X
         Y=[]
@@ -213,7 +213,7 @@ class Network:
         self.layers=[]
         self.X_sets=[]
         self.y_sets=[]
-        
+
     def add_trainSet(self,X,y):
         if np.shape(X)[0]!=np.shape(y)[0]:
             print "Dimensions of X and y don't match"
@@ -221,13 +221,13 @@ class Network:
         self.X_sets.append(X)
         self.y_sets.append(y)
         return 0
-        
-    def add_layer(self,name,models): 
+
+    def add_layer(self,name,models):
         layer=Layer(name)
         for m in models:
             layer.add_model(m)
         self.layers.append(layer)
-        
+
     def train_first_layer(self):
         for i in range(len(self.X_sets)):
             X=self.X_sets[i]
@@ -248,11 +248,11 @@ class Network:
             for i in range(1,len(self.layers)):
                 self.train_NonFirst_layer(i,X,y)
         return 0
-    
+
     def activate_layer(self,layer_n,X_in):
         layer=self.layers[layer_n]
         X_out=layer.activate(X_in)
-        return X_out   
+        return X_out
 
     def predict_proba(self,X):
         X_in=X
@@ -291,13 +291,13 @@ def concatenate(source_list,X_train_list,y_train_list):
     else:
         source=source_list[0]
         X_train,y_train=X_train_list[source],y_train_list[source]
-        
+
     return X_train,y_train
 
 # Test a single estimator on X_test,y_test
 # Returns ROC-AUC
 def test_single_model(estimator,X_test,y_test):
-    
+
     if type(estimator)==svm.classes.SVC:
         y_proba=estimator.decision_function(X_test)
         y=(y_proba-np.min(y_proba))/(np.max(y_proba)-np.min(y_proba))
@@ -305,8 +305,8 @@ def test_single_model(estimator,X_test,y_test):
     else:
         y=estimator.predict_proba(X_test)
         roc=roc_auc_score(y_test,y[:,1])
-        
-    return roc   
+
+    return roc
 
 # Train and test classifier of type class_type on the concatenated data from source_list
 def test_algo(source_list,target,X_train_list,y_train_list,X_test_list,y_test_list,class_type,Cmin,Cmax):
@@ -323,16 +323,5 @@ def test_algo(source_list,target,X_train_list,y_train_list,X_test_list,y_test_li
 
     # Compute ROC on test
     roc = test_single_model(estimator,X_test,y_test)
-    
+
     return roc,estimator,best_params
-
-
-
-
-
-
-
-
-
-
-

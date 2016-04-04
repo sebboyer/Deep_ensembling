@@ -5,7 +5,7 @@ Date : January 2016
 
 Train multiple models on multiple DataSets
 
-Models currently supported : 
+Models currently supported :
 - 'lr' for Logistic Regresssion
 - 'nn' for KNearestNeighbors
 - 'rf' for Random forest
@@ -14,12 +14,12 @@ Models currently supported :
 
 Model type can be one of the two :
 - 'ind' train individual models on each DataSet
-- 'concat' train models on the concatenation of all DataSet but one 
+- 'concat' train models on the concatenation of all DataSet but one
 
 '''
 
 
-from dataFormat import *
+#from dataFormat import *
 from ensembling import *
 
 
@@ -45,7 +45,7 @@ def train_individual_models(X_train_list,y_train_list,model_list,params_list,par
         estimators_list = []
         for source in list_sources:
             estimators_list.append(train_model(X_train_list,X_train_list,y_train_list,y_train_list,model_list,params_list,source))
-    
+
     # Transform list into dictionnary
     for i,estimator_dic in enumerate(estimators_list):
         dic[i] = estimator_dic
@@ -59,7 +59,7 @@ def train_model(X_train_list,X_test_list,y_train_list,y_test_list,model_list,par
     dic={}
     source=[source]
     target=0 # Target doesn't matter because we don't remember evaluation (only estimator)
-    
+
     for i,model in enumerate(model_list):
         print "# Training "+model
         Cmin,Cmax=params_list[i]
@@ -87,11 +87,11 @@ def train_concatenated_models(X_train_list,y_train_list,model_list,params_list,p
         estimators_list = []
         for sources in list_sources:
             estimators_list.append(train_concat_model(X_train_list,X_train_list,y_train_list,y_train_list,model_list,params_list,sources))
-    
+
     # Transform list into dictionnary
     for i,estimator_dic in enumerate(estimators_list):
         dic[i] = estimator_dic
-    
+
     return dic
 
 def train_concat_model(X_train_list,X_test_list,y_train_list,y_test_list,model_list,params_list,sources):
@@ -99,7 +99,7 @@ def train_concat_model(X_train_list,X_test_list,y_train_list,y_test_list,model_l
     print "##### Train for DataSets : ",sources
     dic={}
     target = sources[0] # We don't remember AUC anyways
-    
+
     for i,model in enumerate(model_list):
         print "# Training "+model
         Cmin,Cmax=params_list[i]
@@ -125,5 +125,3 @@ def main(X_train_list,y_train_list,model_list,params_list,model_type='ind',outpu
         pickle.dump(dic,open( output_filename, "wb" ) )
 
     return dic
-
-
