@@ -10,6 +10,8 @@ This package let you define easily what kind of classification model to build an
 
 <!--![Majority Vote Illustration](Pictures/maj_vote_cases3.jpg)-->
 
+![](Pictures/structure2.jpg)
+
 ## How to use : Train models
 
 The script training.py allows you to train multiple binary models on multiple training Datasets in parallel.
