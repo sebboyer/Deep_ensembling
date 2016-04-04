@@ -17,11 +17,12 @@ The following lines will train a LogisticRegression, a NearestNeighbor and a Ran
 
 ```python
 import training as train
+import itertools
 
 model_list = ['lr','rf','nn']  # The models you want to train ('lr','rf','nn' or 'svm')
 params_list = [(1,4),(0,0),(80,150)] # The associated parameters range
-output_filename = 'TrainedModels.p' # The name of the output files where estimators will be saved
-train.main(X_train_list,y_train_list,model_list,params_list,output_filename=output_filename) # Train !
+estimators = train.main(X_train_list,y_train_list,model_list,params_list) # Train !
+estimators_list = list(itertools.chain(*[x.values() for x in estimators.values()])) # Parse estimators
 ```
 This will pickle the trained models in output_filename.
 
@@ -41,22 +42,15 @@ A structure is defined as an object from class 'Network'. When no 'links' betwee
 from ensembling import *
 
 #### Structure A 
-N=Network() # Define Network
-N.add_layer("Models_layer",[]) # First layer
-N.add_layer("Output_layer",[Vote("simple")])  # Last Layer
+Na=Network() # Define Network
+Na.add_layer("Models_layer",[]) # First layer
+Na.add_layer("Output_layer",[Vote("simple")])  # Last Layer
 
 #### Structure B 
-N=Network() # Define Network
-N.add_layer("Models_layer",[]) # First layer
-
-n_input_models_per_source = 3 # Second layer
-n_sources = 3
-n_output_models_per_source = 2
-N.add_layer("Hidden_layer",[Vote("simple"),Vote("norm")])
-N.layers[1].links = create_independent_links(n_input_models_per_source,n_sources,n_output_models_per_source)
-
-N.add_layer("Hidden_layer",[Vote("simple"),Vote("rank"),Vote("norm")]) # Third Layer
-N.add_layer("Output_layer",[Vote("simple")])  # Fourth Layer
+Nb=Network() # Define Network
+Nb.add_layer("Models_layer",[]) # First layer
+Nb.add_layer("Hidden_layer",[Vote("rank"), Model("lr",-3,6),Vote("simple")])
+Nb.add_layer("Output_layer",[ Model("lr",-3,6)])  # Last Layer   Model("lr",-3,6)
 ```
 ![](Pictures/examples.jpg)
 
@@ -78,19 +72,64 @@ The following lines will test the AUC of the 'network' with the 'estimators' on 
 ```python
 from testing import *
 
-ens = Ensemble(estimators,network_file) # Define Ensembling method
-plot_graph(net) # Plot ensembling structure
+ens = Ensemble(estimators,network=Na) # Define Ensembling method
+plot_graph(ens.network) # Plot ensembling structure
 
 ens.train(X_val,y_val) # Train the meta models on some validation data
-res = ens.eval(X_test,y_test) # Evaluate each estimator on each layer of the ensembling structure
 
+# Display performance
+res = ens.eval(X_test,y_test) # Evaluate each estimator on each layer of the ensembling structure
 plot_graph(net,results = res) # Plot ensembling results
+
+# Output predictions
+y_pred = ens.network.predict(X_test) # Forward pass in network to get final predictions
+
+
 ```
 ![](Pictures/s1.png)
 
-![](Pictures/s6.png)
+<!--![](Pictures/s6.png)-->
 
-<!--Options inlcude :-->
-<!--- skip_models : list of model names to skip (among 'lr', 'nn', 'rf', 'svm')-->
-<!--- para : if para=1 run test in parallel-->
-<!--- DataSets : list of source index to take into account (default is all)-->
+## Example : Digits
+
+Preparin data
+```python
+from sklearn.datasets import load_digits
+
+# Data : the MNIST Data (small)
+digits = load_digits(10)
+X,y = digits.data,digits.target
+
+# Labels = odds/even numbers
+for label in range(10):
+    y[y==label]=label%2
+
+# Shuffle and split data
+X,y = shuffle(X,y,random_state=1)
+n_train = int(0.8*np.shape(digits.data)[0])
+X_train, y_train = X[:n_train],y[:n_train]
+X_test, y_test = X[n_train:],y[n_train:]
+```
+
+Learning predictors and ensembling structures
+```python 
+model_list = ['lr','rf','nn']  # The models you want to train ('lr','rf','nn' or 'svm')
+params_list = [(1,4),(0,0),(6,7)] # The associated parameters range
+estimators = train.main([X_train[:n_train/2],X_train[n_train/2:]],[y_train[:n_train/2],y_train[n_train/2:]],model_list,params_list) # Train !
+estimators_list = list(itertools.chain(*[x.values() for x in estimators.values()]))
+```
+
+Defining ensembling structure
+```python
+N=Network() # Define Network
+N.add_layer("Models_layer",[]) # First layer
+N.add_layer("Hidden_layer",[Vote("rank"), Model("lr",-3,6),Vote("simple")])
+N.add_layer("Output_layer",[ Model("lr",-3,6)])  # Last Layer   Model("lr",-3,6)
+```
+
+Apply struture to predictor set
+```python
+ens = Ensemble(estimators_list,network=N) 
+ens.train(X_train,y_train)
+y_pred = ens.network.predict(X_test)
+```
