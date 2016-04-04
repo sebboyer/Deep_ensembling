@@ -280,6 +280,8 @@ class Network:
     def evaluate(self,X_test,y_test):
         auc={}
         X_in=X_test
+
+        print np.shape(X_in)
         for i in range(len(self.layers)):
             layer_name="Layer "+str(i)
             auc[layer_name]={}
