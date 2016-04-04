@@ -8,7 +8,7 @@ Deep_ensembing is a package that let you train models on different data-sets and
 
 This package let you define easily what kind of classification model to build and how to combine them. The outcome of the workflow is a robust predictive model that is likely to perform very well on a new data source.
 
-![Majority Vote Illustration](Pictures/maj_vote_cases3.jpg)
+<!--![Majority Vote Illustration](Pictures/maj_vote_cases3.jpg)-->
 
 ## How to use : Train models
 
@@ -26,7 +26,7 @@ estimators_list = list(itertools.chain(*[x.values() for x in estimators.values()
 ```
 This will pickle the trained models in output_filename.
 
-![](Pictures/structure2.jpg)
+<!--![](Pictures/structure2.jpg)-->
 
 Options include :
 - para : if para=1 run in parallel 
@@ -52,9 +52,9 @@ Nb.add_layer("Models_layer",[]) # First layer
 Nb.add_layer("Hidden_layer",[Vote("rank"), Model("lr",-3,6),Vote("simple")])
 Nb.add_layer("Output_layer",[ Model("lr",-3,6)])  # Last Layer   Model("lr",-3,6)
 ```
-![](Pictures/examples.jpg)
+<!--![](Pictures/examples.jpg)-->
 
-Some default structures are provided in '/Structures/'
+Some default structures are provided in the 'Structures' folder
 
 ```python
 from create_network import *
@@ -86,13 +86,14 @@ y_pred = ens.network.predict(X_test) # Forward pass in network to get final pred
 
 
 ```
-![](Pictures/s1.png)
+<!--![](Pictures/s1.png)-->
 
 <!--![](Pictures/s6.png)-->
 
-## Example : Digits
+## Example : MNIST Digits
+This is a simple example with only 1 dataset. 
 
-Preparin data
+Preparing data
 ```python
 from sklearn.datasets import load_digits
 
@@ -105,17 +106,17 @@ for label in range(10):
     y[y==label]=label%2
 
 # Shuffle and split data
-X,y = shuffle(X,y,random_state=1)
+X,y = shuffle(X,y,random_state=0)
 n_train = int(0.8*np.shape(digits.data)[0])
 X_train, y_train = X[:n_train],y[:n_train]
 X_test, y_test = X[n_train:],y[n_train:]
 ```
 
-Learning predictors and ensembling structures
+Learning predictors and ensembling structures. For several datasets, ```python [X_train] [y_train]``` should be replaced by two lists ```python X_train_list y_train_list```.
 ```python 
 model_list = ['lr','rf','nn']  # The models you want to train ('lr','rf','nn' or 'svm')
 params_list = [(1,4),(0,0),(6,7)] # The associated parameters range
-estimators = train.main([X_train[:n_train/2],X_train[n_train/2:]],[y_train[:n_train/2],y_train[n_train/2:]],model_list,params_list) # Train !
+estimators = train.main([X_train],[y_train],model_list,params_list) # Train !
 estimators_list = list(itertools.chain(*[x.values() for x in estimators.values()]))
 ```
 
@@ -123,13 +124,16 @@ Defining ensembling structure
 ```python
 N=Network() # Define Network
 N.add_layer("Models_layer",[]) # First layer
-N.add_layer("Hidden_layer",[Vote("rank"), Model("lr",-3,6),Vote("simple")])
-N.add_layer("Output_layer",[ Model("lr",-3,6)])  # Last Layer   Model("lr",-3,6)
+N.add_layer("Output_layer",[ Model("lr",-3,6)])  # Last Layer
 ```
 
-Apply struture to predictor set
+Apply struture to the set of estimators
 ```python
 ens = Ensemble(estimators_list,network=N) 
 ens.train(X_train,y_train)
 y_pred = ens.network.predict(X_test)
 ```
+
+Accuracy on test 
+- Individual classifiers : lr (86%),rf (88%), nn (98.9%)
+- Network structure (99.4%)
