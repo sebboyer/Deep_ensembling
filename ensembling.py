@@ -138,12 +138,26 @@ class Layer:
     # Train models one by one and include estimators in self.estimators
     def train_models(self,X=None,y=None):
         estimators=[]
-        for m in self.models:
-            if isinstance(m,Model): # If m is of class Model: train + append
-                estimator,params=m.train(X,y)
-                estimators.append(estimator)
-            else: # If m is of class Vote : append it
-                estimators.append(m)
+
+        if self.links != {}:
+            for i,est_id in enumerate(self.links):
+                m = self.models[est_id]
+
+                if isinstance(m,Model): # If m is of class Model: train + append
+                    children = self.links[est_id]
+                    X_feat = X[:,children]
+                    estimator,params=m.train(X_feat,y)
+                    estimators.append(estimator)
+                else: # If m is of class Vote : append it
+                    estimators.append(m)
+        else:
+            for m in self.models:
+                if isinstance(m,Model): # If m is of class Model: train + append
+                    estimator,params=m.train(X,y)
+                    estimators.append(estimator)
+                else: # If m is of class Vote : append it
+                    estimators.append(m)
+
         self.add_estimators(estimators)
         return estimators
 
@@ -163,7 +177,7 @@ class Layer:
                     y=m.predict_proba(X)[:,0]
                 Y.append(y)
         else: # If links specified, then apply structure
-            for est_id in self.links:
+            for i,est_id in enumerate(self.links):
                 m = self.estimators[est_id]
                 children = self.links[est_id]
                 X_feat = X[:,children]
@@ -260,12 +274,19 @@ class Network:
             X_in=self.activate_layer(i,X_in)
         return X_in
 
+    def predict(self,X,t=0.5):
+        y_proba = self.predict_proba(X)
+        y_pred = [0 if x>t else 1 for x in y_proba]
+        return y_pred
+
     def overweight_best_estimator(self):
         self.layers[0].overweight_best_estimator(self.X_sets,self.y_sets)
 
     def evaluate(self,X_test,y_test):
         auc={}
         X_in=X_test
+
+        print np.shape(X_in)
         for i in range(len(self.layers)):
             layer_name="Layer "+str(i)
             auc[layer_name]={}
