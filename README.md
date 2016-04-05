@@ -8,7 +8,9 @@ Deep_ensembing is a package that let you train models on different data-sets and
 
 This package let you define easily what kind of classification model to build and how to combine them. The outcome of the workflow is a robust predictive model that is likely to perform very well on a new data source.
 
-![An example of a simpel Ensembling structure](Pictures/why.jpg)
+<!--![Majority Vote Illustration](Pictures/maj_vote_cases3.jpg)-->
+
+![](Pictures/structure2.jpg)
 
 ## How to use : Train models
 
@@ -17,74 +19,127 @@ The following lines will train a LogisticRegression, a NearestNeighbor and a Ran
 
 ```python
 import training as train
+import itertools
 
-model_list = ['lr','rf','nn']
-params_list = [(1,4),(0,0),(80,150)]
-output_filename = 'TrainedModels.p'
-train.main(X_train_list,y_train_list,model_list,params_list,output_filename=output_filename)
+model_list = ['lr','rf','nn']  # The models you want to train ('lr','rf','nn' or 'svm')
+params_list = [(1,4),(0,0),(80,150)] # The associated parameters range
+estimators = train.main(X_train_list,y_train_list,model_list,params_list) # Train !
+estimators_list = list(itertools.chain(*[x.values() for x in estimators.values()])) # Parse estimators
 ```
 This will pickle the trained models in output_filename.
 
-![](Pictures/structure2.jpg)
+<!--![](Pictures/structure2.jpg)-->
 
 Options include :
 - para : if para=1 run in parallel 
 - model_type : if model_type='concat' trained concatenated models (concatenate all dataSet but one and train models on this concatenation, do it for each hold-out DataSet).
 
-## How to use : Build Ensembling structure
+## How to use : Build Ensembling Structures
 
-This package allows you to create from very simple to very complex "Ensembling method" always with very little code. 
+This package allows you to create your own from very simple to very complex "Ensembling method". 
 
-A structure is defined as an object from class 'Network'. When no 'links' between layers are mentionned the fully-connected option is default. We show the code to create the two structures shown in the figure below.
+A structure is defined as an object from class 'Network'. When no 'links' between layers are mentionned the default is fully-connected. We show code to create the two structures shown in the figure below.
 
 ```python
 from ensembling import *
 
 #### Structure A 
-N=Network() # Define Network
-N.add_layer("Models_layer",[]) # First layer
-N.add_layer("Output_layer",[Vote("simple")])  # Last Layer
+Na=Network() # Define Network
+Na.add_layer("Models_layer",[]) # First layer
+Na.add_layer("Output_layer",[Vote("simple")])  # Last Layer
 
 #### Structure B 
-N=Network() # Define Network
-N.add_layer("Models_layer",[]) # First layer
-
-n_input_models_per_source = 3 # Second layer
-n_sources = 3
-n_output_models_per_source = 2
-N.add_layer("Hidden_layer",[Vote("simple"),Vote("norm")])
-N.layers[1].links = create_independent_links(n_input_models_per_source,n_sources,n_output_models_per_source)
-
-N.add_layer("Hidden_layer",[Vote("simple"),Vote("rank"),Vote("norm")]) # Third Layer
-N.add_layer("Output_layer",[Vote("simple")])  # Fourth Layer
+Nb=Network() # Define Network
+Nb.add_layer("Models_layer",[]) # First layer
+Nb.add_layer("Hidden_layer",[Vote("rank"), Model("lr",-3,6),Vote("simple")])
+Nb.add_layer("Output_layer",[ Model("lr",-3,6)])  # Last Layer   Model("lr",-3,6)
 ```
-![](Pictures/examples.jpg)
+<!--![](Pictures/examples.jpg)-->
 
-A default structure is provided, use :
+Some default structures are provided in the 'Structures' folder
 
 ```python
-from ensembling import *
+from create_network import *
 
-N = create_simple_network()
+net_name = 'Network_1L_simple'
+network = load_net(net_name) # This is a network
 ```
-
 
 ## How to use : Test models
 
 The script testing.py allows you to test you trained models. More importantly it allows you to have them vote in a structured way that you can define. We provide a default structure :
-- create_net_func = create_simple_network : is a structure where all provided models vote in three different ways (classic sum-vote, rank-based vote, and normalized vote), then those three votes are aggregated using a last classic vote to produce the final output.
 
-The following lines will test the AUC of all pre-trained models in 'TrainedModels.p' on the list of DataSet provided in X_test_list, y_test_list (second dimension of DataSets in X_test_list must be the same as the second dimensions of the DataSets used during training).
+The following lines will test the AUC of the 'network' with the 'estimators' on X_test,y_test (X_train and y_train are used only if the network involve 'meta-model' or 'stacking' and therefore need to be trained).
 
 ```python
-import testing as test
-import pickle
+from testing import *
 
-models = pickle.load(open('TrainedModels.p','rb'))
-results = test.test_all_models(models,X_test_list,y_test_list)
+ens = Ensemble(estimators,network=Na) # Define Ensembling method
+plot_graph(ens.network) # Plot ensembling structure
+
+ens.train(X_val,y_val) # Train the meta models on some validation data
+
+# Display performance
+res = ens.eval(X_test,y_test) # Evaluate each estimator on each layer of the ensembling structure
+plot_graph(net,results = res) # Plot ensembling results
+
+# Output predictions
+y_pred = ens.network.predict(X_test) # Forward pass in network to get final predictions
+
+
+```
+<!--![](Pictures/s1.png)-->
+
+<!--![](Pictures/s6.png)-->
+
+## Example : MNIST Digits
+This is a simple example with only 1 dataset. 
+
+Preparing data for the task of classifying odd vs even hand-written digits.
+```python
+from sklearn.datasets import load_digits
+
+# Data : the MNIST Data (small)
+digits = load_digits(10)
+X,y = digits.data,digits.target
+
+# Labels = odds/even numbers
+for label in range(10):
+    y[y==label]=label%2
+
+# Shuffle and split data
+X,y = shuffle(X,y,random_state=0)
+n_train = int(0.8*np.shape(digits.data)[0])
+X_train, y_train = X[:n_train],y[:n_train]
+X_test, y_test = X[n_train:],y[n_train:]
 ```
 
-Options inlcude :
-- skip_models : list of model names to skip (among 'lr', 'nn', 'rf', 'svm')
-- para : if para=1 run test in parallel
-- DataSets : list of source index to take into account (default is all)
+Learning predictors and ensembling structures. For several datasets, ``` [X_train], [y_train]``` should be replaced by two lists ``` X_train_list, y_train_list```.
+```python 
+model_list = ['lr','rf','nn']  # The models you want to train ('lr','rf','nn' or 'svm')
+params_list = [(1,4),(0,0),(6,7)] # The associated parameters range
+estimators = train.main([X_train],[y_train],model_list,params_list) # Train !
+estimators_list = list(itertools.chain(*[x.values() for x in estimators.values()]))
+```
+
+Defining ensembling structure
+```python
+Na=Network() # Define Network
+Na.add_layer("Models_layer",[]) # First layer
+Na.add_layer("Output_layer",[ Vote("simple")])  # Last Layer
+
+Nb=Network() # Define Network
+Nb.add_layer("Models_layer",[]) # First layer
+Nb.add_layer("Output_layer",[ Model("lr",-3,6)])  # Last Layer
+```
+
+Apply struture to the set of estimators
+```python
+ens = Ensemble(estimators_list,network=Na)  # resp Nb
+ens.train(X_train,y_train)
+y_pred = ens.network.predict(X_test)
+```
+
+Accuracy on test 
+- Individual classifiers : lr (86%),rf (88%), nn (98.9%)
+- Network structures : Na (99.2%)   Nb (99.4%)
